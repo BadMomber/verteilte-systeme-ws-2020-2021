@@ -1,0 +1,31 @@
+FROM maven:3.6-jdk-11 AS build
+
+#Get vscommon
+COPY vscommons/ /usr/vscommons/
+
+RUN mvn -f /usr/vscommons/pom.xml clean package
+
+#Install vscommon in Maven
+RUN mvn install:install-file -Dfile=/usr/vscommons/target/vscommons-1.0-SNAPSHOT.jar -DpomFile=/usr/vscommons/pom.xml
+
+#Build sensor-dependency cache
+COPY car/sensor/sensor/pom.xml /usr/sensor/pom.xml
+WORKDIR /usr/sensor
+RUN mvn dependency:go-offline
+
+#Build sensor
+COPY car/sensor/sensor/ /usr/sensor/
+RUN mvn -f /usr/sensor/pom.xml clean package
+
+# Application Container
+FROM openjdk:9
+COPY --from=build /usr/sensor/target /usr/app
+
+# default parameters
+ARG ip="127.0.0.1"
+ARG port=51020
+ARG sensortype="Generic Sensor"
+
+COPY Docker/sensor.sh /run.sh
+
+ENTRYPOINT ["sh","/run.sh"]

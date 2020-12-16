@@ -1,0 +1,40 @@
+version: '3.7'
+services:
+  carsensor-tank:
+    image: sensor:latest
+    build:
+      context: .
+      dockerfile: sensor
+    environment:
+      - 'ip=central'
+      - 'port=60000'
+      - 'sensortype=Tank'
+  carsensor-verkehrslage:
+    image: sensor:latest
+    environment:
+      - 'ip=central'
+      - 'port=60001'
+      - 'sensortype=Verkehrslage'
+  carsensor-durchschnittsgeschwindigkeit:
+    image: sensor:latest
+    environment:
+      - 'ip=central'
+      - 'port=60002'
+      - 'sensortype=Durchschnittsgeschwindigkeit'
+  carsensor-kilometerstand:
+    image: sensor:latest
+    environment:
+      - 'ip=central'
+      - 'port=60003'
+      - 'sensortype=Kilometerstand'
+  central:
+    build:
+      context: .
+      dockerfile: central
+    environment:
+      - 'centralname=Toyota'
+      - 'sensorcount=4'
+      - 'sensorstartport=60000'
+    ports:
+      - 8080:8080
+      - 60010:60010
